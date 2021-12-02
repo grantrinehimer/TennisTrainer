@@ -64,6 +64,42 @@ def get_user(uid):
     return success_response(user.serialize())
 
 
+"""
+Request: NA
+Response:
+{
+    url: www.something.m3u8
+}
+"""
+@app.route("/api/media/<int:vid>")
+def get_video_url(vid):
+    pass
+
+"""
+Request:
+{
+    'filename': 'backhand.mp4',
+    'uid': 5
+}
+
+Response:
+{
+    'url': 'https://s3.us-east-2.amazonaws.com/appdev-backend-final',
+    'fields': 
+    {
+        'key': 'test2.jpg',
+        'x-amz-algorithm': 'AWS4-HMAC-SHA256',
+        'x-amz-credential': 'AKIAUNXPEGRSIPAECH7V/20211202/us-east-2/s3/aws4_request', 
+        'x-amz-date': '20211202T032909Z', 
+        'policy': 'eyJleHBpcmF0aW9uIjogIjIwMjEtMTItMDJUMDQ6Mjk6MDlaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAiYXBwZGV2LWJhY2tlbmQtZmluYWwifSwgeyJrZXkiOiAidGVzdDIuanBnIn0sIHsieC1hbXotYWxnb3JpdGhtIjogIkFXUzQtSE1BQy1TSEEyNTYifSwgeyJ4LWFtei1jcmVkZW50aWFsIjogIkFLSUFVTlhQRUdSU0lQQUVDSDdWLzIwMjExMjAyL3VzLWVhc3QtMi9zMy9hd3M0X3JlcXVlc3QifSwgeyJ4LWFtei1kYXRlIjogIjIwMjExMjAyVDAzMjkwOVoifV19', 
+        'x-amz-signature': 'e2bec138e2db65e361e60dbab614cced32f394bbe89c8d046bcc4caf50256237'
+    }
+}
+"""
+@app.route("/api/media/", methods=["POST"])
+def get_video_upload_url():
+    pass
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

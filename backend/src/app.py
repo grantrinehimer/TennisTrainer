@@ -68,6 +68,13 @@ def authenticate_user():
                 {
                     "vid": {video id},
                     "display_title": {display title of video}
+                    "tags": [
+                        {
+                            "tid": 1,
+                            "name": "backhand"
+                        }
+                        ...
+                    ]
                 }
                 ...
             ]
@@ -106,6 +113,24 @@ def authenticate_user():
 
 @app.route("/api/user/<int:uid>/media/")
 def get_user_media(uid):
+    """
+    Request:
+    Response:
+    {
+        "uploads": [
+            {
+                "vid": 1,
+                "display_title": "{the new display title for the video}",
+                "tags": [
+                    {
+                        "tid": 1,
+                        "name": "backhand"
+                    }
+                ]
+            }
+        ]
+    }
+    """
     user = User.query.filter_by(uid=uid).first()
     if user is None:
         return failure_response("User not found.")
@@ -125,6 +150,12 @@ def update_upload_title(vid):
     {
         "vid": {video id},
         "display_title": {display title of video}
+        "tags": [
+            {
+                "tid": 1,
+                "name": "backhand"
+            }
+        ]
     }
     """
 
@@ -294,7 +325,7 @@ def delete_tag(vid, tid):
     Response:
     {
         "vid": 1,
-        "display_title": "{the new display title for the video}",
+        "display_title": "{the display title for the video}",
         "tags": []
     }
     """

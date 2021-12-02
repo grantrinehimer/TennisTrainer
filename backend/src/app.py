@@ -6,7 +6,10 @@ from flask import request
 import json
 
 from db import User
+from db import Upload
 from db import db
+
+from media import create_presigned_url
 
 app = Flask(__name__)
 
@@ -27,7 +30,6 @@ else:
     # TODO: Configure prod environment
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
 
 db.init_app(app)
 with app.app_context():
@@ -79,41 +81,63 @@ def get_user(uid):
     return success_response(user.serialize())
 
 
-"""
-Request: NA
-Response:
-{
-    url: www.something.m3u8
-}
-"""
 @app.route("/api/media/<int:vid>")
 def get_video_url(vid):
-    pass
-
-"""
-Request:
-{
-    'filename': 'backhand.mp4',
-    'uid': 5
-}
-
-Response:
-{
-    'url': 'https://s3.us-east-2.amazonaws.com/appdev-backend-final',
-    'fields': 
+    """
+    Request: NA
+    Response:
     {
-        'key': 'test2.jpg',
-        'x-amz-algorithm': 'AWS4-HMAC-SHA256',
-        'x-amz-credential': 'AKIAUNXPEGRSIPAECH7V/20211202/us-east-2/s3/aws4_request', 
-        'x-amz-date': '20211202T032909Z', 
-        'policy': 'eyJleHBpcmF0aW9uIjogIjIwMjEtMTItMDJUMDQ6Mjk6MDlaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAiYXBwZGV2LWJhY2tlbmQtZmluYWwifSwgeyJrZXkiOiAidGVzdDIuanBnIn0sIHsieC1hbXotYWxnb3JpdGhtIjogIkFXUzQtSE1BQy1TSEEyNTYifSwgeyJ4LWFtei1jcmVkZW50aWFsIjogIkFLSUFVTlhQRUdSU0lQQUVDSDdWLzIwMjExMjAyL3VzLWVhc3QtMi9zMy9hd3M0X3JlcXVlc3QifSwgeyJ4LWFtei1kYXRlIjogIjIwMjExMjAyVDAzMjkwOVoifV19', 
-        'x-amz-signature': 'e2bec138e2db65e361e60dbab614cced32f394bbe89c8d046bcc4caf50256237'
+        url: www.something.m3u8
     }
-}
-"""
+    """
+    upload = Upload.query.filter_by(vid=vid).first()
+    if upload is None:
+        return failure_response("Could not locate video id in database.")
+
+    vkey = upload.vkey
+
+    url = create_presigned_url(vkey)
+    if url is None:
+        return failure_response("Could not locate video in S3 bucket.")
+
+    return url
+
+
 @app.route("/api/media/", methods=["POST"])
 def get_video_upload_url():
-    pass
+    """
+    Request:
+    {
+        'filename': 'backhand.mp4',
+        'display_title': 'Backhand Serve 12-2-2021',
+        'uid': 5
+    }
+
+    Response:
+    {
+        'url': 'https://s3.us-east-2.amazonaws.com/appdev-backend-final',
+        'fields':
+        {
+            'key': 'test2.jpg',
+            'x-amz-algorithm': 'AWS4-HMAC-SHA256',
+            'x-amz-credential': 'AKIAUNXPEGRSIPAECH7V/20211202/us-east-2/s3/aws4_request',
+            'x-amz-date': '20211202T032909Z',
+            'policy': 'eyJleHBpcmF0aW9uIjogIjIwMjEtMTItMDJUMDQ6Mjk6MDlaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAiYXBwZGV2LWJhY2tlbmQtZmluYWwifSwgeyJrZXkiOiAidGVzdDIuanBnIn0sIHsieC1hbXotYWxnb3JpdGhtIjogIkFXUzQtSE1BQy1TSEEyNTYifSwgeyJ4LWFtei1jcmVkZW50aWFsIjogIkFLSUFVTlhQRUdSU0lQQUVDSDdWLzIwMjExMjAyL3VzLWVhc3QtMi9zMy9hd3M0X3JlcXVlc3QifSwgeyJ4LWFtei1kYXRlIjogIjIwMjExMjAyVDAzMjkwOVoifV19',
+            'x-amz-signature': 'e2bec138e2db65e361e60dbab614cced32f394bbe89c8d046bcc4caf50256237'
+        }
+    }
+    """
+
+    body = json.loads(request.data)
+    filename = body.get("filename")
+    display_title = body.get("display_title")
+    uid = body.get("uid")
+
+    if filename is None or display_title is None or uid is None:
+        return failure_response("Did not provide all requested fields.", 400)
+
+   # TODO: Get vid for hash()
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

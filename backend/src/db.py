@@ -26,3 +26,19 @@ class User(db.Model):
             "username": self.username,
             "uType": self.uType
         }
+
+
+# Player Uploads Table
+class Upload(db.Model):
+    __tablename__ = 'upload'
+    vid = db.Column(db.Integer, primary_key=True)
+    display_title = db.Column(db.Integer, nullable=False)
+    vkey = db.Column(db.String, nullable=False)
+    uid = db.Column(db.Integer, db.ForeignKey("user.uid"))
+
+    def __init__(self, **kwargs):
+        self.vid = kwargs.get("vid")
+        self.display_title = kwargs.get("display_title")
+        self.vkey = kwargs.get("vkey")
+
+    # TODO: Serialize if needed

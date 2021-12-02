@@ -1,5 +1,6 @@
 import os
 
+from dotenv import load_dotenv
 from flask import Flask
 from flask import request
 import json
@@ -8,18 +9,32 @@ from db import User
 from db import db
 
 app = Flask(__name__)
-db_filename = "tennisTrainer.db"
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///%s" % db_filename
+# load environment variables
+load_dotenv()
+
+ENV = "dev"
+DB_NAME = str(os.environ.get("DB_NAME")).strip()
+DB_USERNAME = str(os.environ.get("DB_USERNAME")).strip()
+DB_PASSWORD = str(os.environ.get("DB_PASSWORD")).strip()
+
+# To use on your local machine, you must configure postgres at port 5432 and put your credentials in your .env.
+if ENV == "dev":
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@localhost:5432/{DB_NAME}"
+    app.config["SQLALCHEMY_ECHO"] = True
+else:
+    app.config["SQLALCHEMY_ECHO"] = False
+    # TODO: Configure prod environment
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_ECHO"] = True
+
 
 db.init_app(app)
 with app.app_context():
     db.create_all()
 
 
-# your routes here
+# Routes
 def success_response(data, code=200):
     return json.dumps(data), code
 

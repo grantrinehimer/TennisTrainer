@@ -7,9 +7,14 @@ import json
 
 from db import User
 from db import Upload
+from db import Tag
 from db import db
 
 from media import create_presigned_url
+from media import create_presigned_url_post
+
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 app = Flask(__name__)
 
@@ -20,6 +25,7 @@ ENV = "dev"
 DB_NAME = str(os.environ.get("DB_NAME")).strip()
 DB_USERNAME = str(os.environ.get("DB_USERNAME")).strip()
 DB_PASSWORD = str(os.environ.get("DB_PASSWORD")).strip()
+G_CLIENT_ID = str(os.environ.get("G_CLIENT_ID")).strip()
 
 # To use on your local machine, you must configure postgres at port 5432 and put your credentials in your .env.
 if ENV == "dev":
@@ -45,49 +51,107 @@ def failure_response(message, code=404):
     return json.dumps({"error": message}), code
 
 
-@app.route("/api/user/")
-def get_players():
-    return success_response(
-        {"users": [u.serialize() for u in User.query.all()]}
-    )
+@app.route("/api/user/authenticate/", methods=["POST"])
+def authenticate_user():
+    """
+    Request:
+    {
+        "token": "{User's ID Token}"
+    }
+    Response:
+    {
+        "uid": {User's local id},
+        "display_name": "{User's display name}",
+        "email": "{User's email}"
+        "uploads":
+            [
+                {
+                    "vid": {video id},
+                    "display_title": {display title of video}
+                }
+                ...
+            ]
+    }
+    """
 
-
-@app.route("/api/user/", methods=["POST"])
-def create_user():
     body = json.loads(request.data)
-    name = body.get("name")
-    email = body.get("email")
-    username = body.get("username")
-    uType = body.get("uType")
+    token = body.get("token")
 
-    if name is None or email is None or username is None or uType is None:
-        return failure_response("Did not provide required data.", 400)
+    if token is None:
+        return failure_response("Could not get token from request body.", 400)
 
-    if uType != 0 and uType != 1:
-        return failure_response("uType must be 0 (player) or 1 (coach)", 400)
+    try:
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), G_CLIENT_ID)
 
-    new_user = User(name=name, email=email, username=username, uType=uType)
+        gid = idinfo["sub"]
+        email = idinfo["email"]
+        display_name = idinfo["name"]
 
-    db.session.add(new_user)
-    db.session.commit()
-    return success_response(new_user.serialize(), 201)
+        if gid is None or email is None or display_name is None:
+            return failure_response("Could not retrieve required fields (Google Account ID, email, and name) from"
+                                    "Google token. Unauthorized.", 401)
+
+        user = User.query.filter_by(gid=gid).first()
+
+        if user is None:
+            # User does not exist, add them.
+            user = User(gid=gid, display_name=display_name, email=email)
+            db.session.add(user)
+            db.session.commit()
+
+        return success_response(user.serialize(), 200)
+    except ValueError:
+        return failure_response("Could not authenticate user. Unauthorized.", 401)
 
 
-@app.route("/api/user/<int:uid>/")
-def get_user(uid):
+@app.route("/api/user/<int:uid>/media/")
+def get_user_media(uid):
     user = User.query.filter_by(uid=uid).first()
     if user is None:
         return failure_response("User not found.")
-    return success_response(user.serialize())
+    return success_response(
+        {"uploads": [u.serialize() for u in Upload.query.filter_by(uid=uid)]}
+    )
 
 
-@app.route("/api/media/<int:vid>")
+@app.route("/api/media/<int:vid>/update-title/", methods=['POST'])
+def update_upload_title(vid):
+    """
+    Request:
+    {
+        "new_title": "{the new display title for the video}" or None (keeps display title the same)
+    }
+    Response:
+    {
+        "vid": {video id},
+        "display_title": {display title of video}
+    }
+    """
+
+    upload = Upload.query.filter_by(vid=vid).first()
+
+    if upload is None:
+        return failure_response("Upload not found.")
+
+    body = json.loads(request.data)
+
+    new_title = body.get("new_title")
+
+    if new_title is not None:
+        upload.display_title = new_title
+
+    db.session.commit()
+
+    return success_response(upload.serialize())
+
+
+@app.route("/api/media/<int:vid>/")
 def get_video_url(vid):
     """
     Request: NA
     Response:
     {
-        url: www.something.m3u8
+        "url": "www.something.m3u8"
     }
     """
     upload = Upload.query.filter_by(vid=vid).first()
@@ -100,7 +164,7 @@ def get_video_url(vid):
     if url is None:
         return failure_response("Could not locate video in S3 bucket.")
 
-    return url
+    return success_response({'url': url})
 
 
 @app.route("/api/media/", methods=["POST"])
@@ -122,7 +186,7 @@ def get_video_upload_url():
             'x-amz-algorithm': 'AWS4-HMAC-SHA256',
             'x-amz-credential': 'AKIAUNXPEGRSIPAECH7V/20211202/us-east-2/s3/aws4_request',
             'x-amz-date': '20211202T032909Z',
-            'policy': 'eyJleHBpcmF0aW9uIjogIjIwMjEtMTItMDJUMDQ6Mjk6MDlaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAiYXBwZGV2LWJhY2tlbmQtZmluYWwifSwgeyJrZXkiOiAidGVzdDIuanBnIn0sIHsieC1hbXotYWxnb3JpdGhtIjogIkFXUzQtSE1BQy1TSEEyNTYifSwgeyJ4LWFtei1jcmVkZW50aWFsIjogIkFLSUFVTlhQRUdSU0lQQUVDSDdWLzIwMjExMjAyL3VzLWVhc3QtMi9zMy9hd3M0X3JlcXVlc3QifSwgeyJ4LWFtei1kYXRlIjogIjIwMjExMjAyVDAzMjkwOVoifV19',
+            'policy': 'eyJleHBpcmF0aW9uIjogIjIwMjEtMTItMDJUMDQ6Mjk6MDlaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAiYXBw...
             'x-amz-signature': 'e2bec138e2db65e361e60dbab614cced32f394bbe89c8d046bcc4caf50256237'
         }
     }
@@ -136,7 +200,113 @@ def get_video_upload_url():
     if filename is None or display_title is None or uid is None:
         return failure_response("Did not provide all requested fields.", 400)
 
-   # TODO: Get vid for hash()
+    try:
+        # Creates upload with vkey as filename and then changes it after using the new vid to make the vkey
+        new_upload = Upload(vkey=filename, display_title=display_title, uid=uid)
+        db.session.add(new_upload)
+        db.session.flush()
+        vid = new_upload.vid
+        vkey = str(hash(str(filename+str(uid)+str(vid))))
+        new_upload.vkey = vkey
+        db.session.commit()
+
+        response = create_presigned_url_post(vkey)
+        if response is None:
+            return failure_response("Could not get presigned url from S3.", 502)
+
+        return success_response(response)
+
+    except Exception as e:
+        print(e)
+        return failure_response("Error while trying to submit to database")
+
+
+@app.route("/api/media/<int:vid>/tag/", methods=['POST'])
+def add_tag(vid):
+    """
+    Request:
+    {
+        "name": "backhand"
+    }
+    Response:
+    {
+        "vid": 1,
+        "display_title": "{the new display title for the video}",
+        "tags": [
+            {
+                "tid": 1,
+                "name": "backhand"
+            }
+        ]
+    }
+    """
+    upload = Upload.query.filter_by(vid=vid).first()
+    if upload is None:
+        return failure_response("Upload not found.")
+
+    body = json.loads(request.data)
+    name = body.get("name")
+
+    if name is None:
+        return failure_response("Could not get name from request.", 400)
+
+    tag = Tag.query.filter_by(name=name).first()
+
+    status_code = 200
+
+    if tag is None:
+        tag = Tag(name=name)
+        db.session.add(tag)
+        db.session.flush()
+        status_code = 201
+
+    upload.tags.append(tag)
+    db.session.commit()
+
+    return success_response(upload.serialize(), status_code)
+
+
+@app.route("/api/media/<int:vid>/tag/")
+def get_tags(vid):
+    """
+    Request:
+    Response:
+    {
+        "tags": [
+            {
+                "tid": 1,
+                "name": "backhand"
+            }
+        ]
+    }
+    """
+    upload = Upload.query.filter_by(vid=vid).first()
+    if upload is None:
+        return failure_response("Upload not found.")
+
+    return success_response({"tags": [t.serialize() for t in upload.tags]})
+
+
+@app.route("/api/media/<int:vid>/tag/<int:tid>/", methods=['DELETE'])
+def delete_tag(vid, tid):
+    """
+    Request:
+    Response:
+    {
+        "vid": 1,
+        "display_title": "{the new display title for the video}",
+        "tags": []
+    }
+    """
+    upload = Upload.query.filter_by(vid=vid).first()
+    if upload is None:
+        return failure_response("Upload not found.")
+
+    upload.tags = [t for t in upload.tags if t.tid != tid]
+
+    db.session.commit()
+
+    return success_response(upload.serialize())
 
 
 if __name__ == "__main__":

@@ -32,8 +32,8 @@ if ENV == "dev":
     app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@localhost:5432/{DB_NAME}"
     app.config["SQLALCHEMY_ECHO"] = True
 else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = str(os.environ.get('DATABASE_URL')).replace("postgres", "postgresql")
     app.config["SQLALCHEMY_ECHO"] = False
-    # TODO: Configure prod environment
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 

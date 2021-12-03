@@ -32,7 +32,7 @@ if ENV == "dev":
     app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@localhost:5432/{DB_NAME}"
     app.config["SQLALCHEMY_ECHO"] = True
 else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://rplozlvyhuwhpt:2cbbdcc81a2b16ac6ed861d704b0ca8f500d802716583117d5b83ecdc7640c96@ec2-52-205-6-133.compute-1.amazonaws.com:5432/dcnl7iehns0lc1"
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DATABASE_URL')
     app.config["SQLALCHEMY_ECHO"] = False
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

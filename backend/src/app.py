@@ -1,17 +1,23 @@
+#!/usr/bin/env python3
+
+import json
 import os
+import boto3
+
+from botocore.client import Config
 
 from dotenv import load_dotenv
 from flask import Flask
 from flask import request
-import json
+from werkzeug.utils import secure_filename
+
+from media import *
+import media
 
 from db import User
 from db import Upload
 from db import Tag
 from db import db
-
-from media import create_presigned_url
-from media import create_presigned_url_post
 
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -21,11 +27,23 @@ app = Flask(__name__)
 # load environment variables
 load_dotenv()
 
+# constants
 ENV = "dev"
 DB_NAME = str(os.environ.get("DB_NAME")).strip()
 DB_USERNAME = str(os.environ.get("DB_USERNAME")).strip()
 DB_PASSWORD = str(os.environ.get("DB_PASSWORD")).strip()
 G_CLIENT_ID = str(os.environ.get("G_CLIENT_ID")).strip()
+AWS_ACCESS_KEY_ID = str(os.environ.get("ACCESS_KEY_ID")).strip()
+AWS_SECRET_ACCESS_KEY = str(os.environ.get("SECRET_ACCESS_KEY")).strip()
+AWS_BUCKET_NAME = 'appdev-backend-final'
+AWS_BUCKET_REGION_NAME = 'us-east-2'
+
+# global Amazon S3 client
+s3 = boto3.client('s3', region_name=AWS_BUCKET_REGION_NAME, 
+                  endpoint_url=f'https://s3.{AWS_BUCKET_REGION_NAME}.amazonaws.com',
+                  aws_access_key_id=AWS_ACCESS_KEY_ID, 
+                  aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                  config=Config(signature_version='s3v4'))
 
 # To use on your local machine, you must configure postgres at port 5432 and put your credentials in your .env.
 if ENV == "dev":
@@ -36,11 +54,13 @@ else:
     app.config["SQLALCHEMY_ECHO"] = False
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 512 # Don't accept files larger than 0.5GB
+app.config['UPLOAD_EXTENSIONS'] = ['.mp4']
+app.config['UPLOAD_PATH'] = 'uploads'
 
 db.init_app(app)
 with app.app_context():
     db.create_all()
-
 
 # Routes
 def success_response(data, code=200):
@@ -182,24 +202,25 @@ def get_video_url(vid):
     Request: NA
     Response:
     {
-        "url": "www.something.m3u8"
+        "url": "www.something.m3u8",
     }
     """
     upload = Upload.query.filter_by(vid=vid).first()
+
     if upload is None:
         return failure_response("Could not locate video id in database.")
 
     vkey = upload.vkey
+    object_url = get_object_url(AWS_BUCKET_NAME, AWS_BUCKET_REGION_NAME, vkey)
 
-    url = create_presigned_url(vkey)
-    if url is None:
+    if object_url is None:
         return failure_response("Could not locate video in S3 bucket.")
 
-    return success_response({'url': url})
+    return success_response({'url': object_url})
 
 
 @app.route("/api/media/", methods=["POST"])
-def get_video_upload_url():
+def upload_video():
     """
     Request:
     {
@@ -207,19 +228,9 @@ def get_video_upload_url():
         'display_title': 'Backhand Serve 12-2-2021',
         'uid': 5
     }
-
     Response:
     {
-        'url': 'https://s3.us-east-2.amazonaws.com/appdev-backend-final',
-        'fields':
-        {
-            'key': 'test2.jpg',
-            'x-amz-algorithm': 'AWS4-HMAC-SHA256',
-            'x-amz-credential': 'AKIAUNXPEGRSIPAECH7V/20211202/us-east-2/s3/aws4_request',
-            'x-amz-date': '20211202T032909Z',
-            'policy': 'eyJleHBpcmF0aW9uIjogIjIwMjEtMTItMDJUMDQ6Mjk6MDlaIiwgImNvbmRpdGlvbnMiOiBbeyJidWNrZXQiOiAiYXBw...
-            'x-amz-signature': 'e2bec138e2db65e361e60dbab614cced32f394bbe89c8d046bcc4caf50256237'
-        }
+        'vid': 4
     }
     """
 
@@ -231,6 +242,21 @@ def get_video_upload_url():
     if filename is None or display_title is None or uid is None:
         return failure_response("Did not provide all requested fields.", 400)
 
+    # Sanitize filename
+    filename = secure_filename(filename)
+
+    if filename.isspace() or display_title.isspace() or uid < 0:
+        return failure_response("Invalid fields.", 400)
+
+    # Check for valid file
+    # For security reference, see:
+    # https://blog.miguelgrinberg.com/post/handling-file-uploads-with-flask
+    uploaded_file = request.files['file']
+    file_ext = os.path.splitext(filename)[1]
+    if file_ext not in app.config['UPLOAD_EXTENSIONS'] \
+            or not verify_mp4_integrity(uploaded_file.stream):
+        failure_response("Bad MP4.", 400)
+
     try:
         # Creates upload with vkey as filename and then changes it after using the new vid to make the vkey
         new_upload = Upload(vkey=filename, display_title=display_title, uid=uid)
@@ -240,16 +266,28 @@ def get_video_upload_url():
         vkey = str(hash(str(filename+str(uid)+str(vid))))
         new_upload.vkey = vkey
         db.session.commit()
-
-        response = create_presigned_url_post(vkey)
-        if response is None:
-            return failure_response("Could not get presigned url from S3.", 502)
-
-        return success_response(response)
-
     except Exception as e:
         print(e)
         return failure_response("Error while trying to submit to database")
+
+    try:
+        # Save file to disk
+        path_to_mp4 = os.path.join(app.config['UPLOAD_PATH'], vkey)
+        uploaded_file.save(path_to_mp4)
+
+        # Convert, compress, and upload file to AWS
+        path_to_fmp4 = convert_mp4_to_hsl(path_to_mp4)
+        compress_fmp4(path_to_fmp4)
+        object_url = upload_to_aws(s3, AWS_BUCKET_NAME, AWS_BUCKET_REGION_NAME, path_to_fmp4)
+        remove_fmp4(path_to_fmp4)
+    except Exception as e:
+        # Delete unsuccessful upload from database
+        Upload.query.filter_by(id=vid).delete()
+        db.session.commit()
+        print(e)
+        return failure_response("Error while transferring video")
+
+    return success_response({'vid': vid})
 
 
 @app.route("/api/media/<int:vid>/tag/", methods=['POST'])

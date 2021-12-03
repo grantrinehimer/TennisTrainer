@@ -1,0 +1,3 @@
+[submodule "backend/src/streaming-video/video2hls"]
+	path = backend/src/video2hls
+	url = https://github.com/vincentbernat/video2hls.git

@@ -16,7 +16,7 @@ class User(db.Model):
 
     # Local User ID and Google Account ID combine to make primary key.
     uid = db.Column(db.Integer, primary_key=True)
-    gid = db.Column(db.String, primary_key=True)
+    gid = db.Column(db.String)
     display_name = db.Column(db.String, nullable=False)
     email = db.Column(db.String, nullable=False)
     uploads = db.relationship("Upload", cascade="delete")

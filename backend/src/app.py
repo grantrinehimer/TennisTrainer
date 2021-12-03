@@ -28,7 +28,7 @@ app = Flask(__name__)
 load_dotenv()
 
 # constants
-ENV = "dev"
+ENV = "prod"
 DB_NAME = str(os.environ.get("DB_NAME")).strip()
 DB_USERNAME = str(os.environ.get("DB_USERNAME")).strip()
 DB_PASSWORD = str(os.environ.get("DB_PASSWORD")).strip()

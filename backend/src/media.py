@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Convert a .mp4 file into HlS, upload to AWS, and remove local .mp4 and HLS files
+Utility functions to convert a .mp4 file into HlS, upload to AWS, and remove
+local .mp4 and HLS files, and more.
 
 See this guide for bash implementation:
 https://ryanparman.com/posts/2018/serving-bandwidth-friendly-video-with-hls/

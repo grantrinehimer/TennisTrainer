@@ -32,7 +32,7 @@ if ENV == "dev":
     app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@localhost:5432/{DB_NAME}"
     app.config["SQLALCHEMY_ECHO"] = True
 else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('HEROKU_POSTGRESQL_TEAL_URL')
+    app.config["SQLALCHEMY_DATABASE_URI"] = str(os.environ.get('DATABASE_URL')).replace("postgres", "postgresql")
     app.config["SQLALCHEMY_ECHO"] = False
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

@@ -12,7 +12,7 @@ Our full stack ios app allows users to upload videos of themselves performing ce
 
 **The Future**
 
-This alpha of our product is only the beginning. Once users begin using our alpha to upload themselves hitting certain shots, we will begin training a machine learning model that will offer automatic coaching to clients. Furthermore, we will develop a coache's version that allows instructors to annotate and offer remote feedback to their players. This otated dataset will further improve our ML model and the feedback clients receive. 
+This alpha of our product is only the beginning. Once users begin using our alpha to upload themselves hitting certain shots, we will begin training a machine learning model that will offer automatic coaching to clients. Furthermore, we will develop a coach's version that allows instructors to annotate and offer remote feedback to their players. This dataset will further improve our ML model and the feedback clients receive. 
 
 Utilizing the AWS suite of devices, we will train our model using highly scalable EC2 instances from data stored in our S3 bucket. This allows us to scale our backend with demand in a capital effective manner. 
 

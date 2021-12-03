@@ -29,7 +29,7 @@ class User(db.Model):
     def serialize(self):
         return {
             "uid": self.uid,
-            "display_name": self.username,
+            "display_name": self.display_name,
             "email": self.email,
             "uploads": [u.serialize() for u in self.uploads]
         }

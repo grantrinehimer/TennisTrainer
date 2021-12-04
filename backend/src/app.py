@@ -280,6 +280,8 @@ def upload_video():
         # Save file to disk
         path_to_mp4 = os.path.join(app.config['UPLOAD_PATH'], vkey)
         uploaded_file.save(path_to_mp4)
+        with open('shawty.txt', 'w') as f:
+            f.write('please spawn on herokus servers')
 
         # Convert, compress, and upload file to AWS
         path_to_fmp4 = convert_mp4_to_hsl(path_to_mp4)
@@ -291,7 +293,7 @@ def upload_video():
         Upload.query.filter_by(vid=vid).delete()
         db.session.commit()
         print(e)
-        return failure_response("Error while transferring video")
+        return failure_response("Error while transferring video", 502)
 
     return success_response({'vid': vid})
 

@@ -56,7 +56,7 @@ else:
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 512 # Don't accept files larger than 0.5GB
 app.config['UPLOAD_EXTENSIONS'] = ['.mp4']
-app.config['UPLOAD_PATH'] = 'tmp'
+app.config['UPLOAD_PATH'] = '/tmp'
 
 db.init_app(app)
 with app.app_context():
@@ -278,10 +278,6 @@ def upload_video():
 
     try:
         # Save file to disk
-        with open('/tmp/shawty.txt', 'w') as f:
-            f.write('this is nothing more than a test of the tmp filesystem')
-        exists = os.path.exists('/tmp/shawty.txt')
-        print(f"Does shawty exist?: {exists}")
         path_to_mp4 = os.path.join(app.config['UPLOAD_PATH'], vkey) + '.mp4'
         uploaded_file.save(path_to_mp4)
 

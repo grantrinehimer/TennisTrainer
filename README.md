@@ -230,7 +230,7 @@ Response:
 
 
 
-###Database Model
+### Database Model
 
 Our database contains three tables: "user", "upload", and "tag". We make use of a PostgreSQL database hosted
 on Heroku that we connect to. 
@@ -247,7 +247,7 @@ There is a one-to-many relationship between users and uploads, and there is a ma
 between uploads and tags.
 
 
-###Third Party APIs
+### Third Party APIs
 
 We made use of AWS's S3 service to host our stream files. We used a publicly available github repo
 (vincentbernat/video2hls) to prepare uploaded videos for HLS streaming. These HLS streaming files were then uploaded 

@@ -16,6 +16,10 @@ import subprocess
 import sys
 import boto3
 
+class ConversionError(Exception):
+    """Raised when there is an error converting between filetypes"""
+    pass
+
 def verify_mp4_integrity(mp4_file) -> bool:
     """
     Check the integrity of a .mp4 file
@@ -36,8 +40,15 @@ def convert_mp4_to_hsl(path_to_mp4: str) -> str:
     # path/to/file.mp4 -> path/to/file
     path_no_ext = os.path.splitext(path_to_mp4)[0]
     # Call git submodule containing python executable video2hls
-    subprocess.run(["/app/video2hls/video2hls", "--debug", "--output",
-                    f"{path_no_ext}.fmp4", "--hls-type", "fmp4", f"{path_to_mp4}"], check=True, capture_output=True)
+
+    try:
+        subprocess.run(["/app/video2hls/video2hls", "--debug", "--output",
+                    f"{path_no_ext}.fmp4", "--hls-type", "fmp4", f"{path_to_mp4}"], check=True, capture_output=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        print(e.returncode)
+        print(e.output)
+        raise ConversionError("Error converting from .mp4 to HSL") from e
+
     # Remove original .mp4
     os.remove(path_to_mp4)
     return f"{path_no_ext}.fmp4"

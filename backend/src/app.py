@@ -280,6 +280,10 @@ def upload_video():
         # Save file to disk
         path_to_mp4 = os.path.join(app.config['UPLOAD_PATH'], vkey) + '.mp4'
         uploaded_file.save(path_to_mp4)
+        with open('tmp/shawty.txt', 'w') as f:
+            f.write('this is nothing more than a test of the tmp filesystem')
+        exists = os.path.exists('tmp/shawty.txt')
+        print(f"Does shawty exist?: {exists}")
 
         # Convert, compress, and upload file to AWS
         path_to_fmp4 = convert_mp4_to_hsl(path_to_mp4)

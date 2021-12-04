@@ -278,7 +278,7 @@ def upload_video():
 
     try:
         # Save file to disk
-        with open('tmp/shawty.txt', 'w') as f:
+        with open('~/tmp/shawty.txt', 'w') as f:
             f.write('this is nothing more than a test of the tmp filesystem')
         exists = os.path.exists('tmp/shawty.txt')
         print(f"Does shawty exist?: {exists}")

@@ -244,6 +244,12 @@ def upload_video():
     # Sanitize filename
     filename = secure_filename(filename)
 
+    # Check if UID is int
+    if not uid.isdigit():
+        return failure_response("UID is not a number.", 400)
+
+    uid = int(uid)
+
     if filename.isspace() or display_title.isspace() or uid < 0:
         return failure_response("Invalid fields.", 400)
 

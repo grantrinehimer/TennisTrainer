@@ -16,9 +16,28 @@ This alpha of our product is only the beginning. Once users begin using our alph
 
 Utilizing the AWS suite of devices, we will train our model using highly scalable EC2 instances from data stored in our S3 bucket. This allows us to scale our backend with demand in a capital effective manner. 
 
+---
+Requirements for HackChallenge
+---
+---
+ios Requirements
+---
+**AutoLayout using NSLayoutContraint or SnapKit**
 
-**Requirements for HackChallenge**
+**UICollectionView or UITableView**
 
-**ios Requirements**
+**Navigation**
 
-**Backend Requirements**
+**Integrating with API**
+
+---
+Backend Requirements
+----
+**Designing an API, using database modeling**
+
+We built routes for "POSTING" and "GETTING" from our S3 bucket. This included formatting the response from the S3 bucket in a way that was compatiable with 
+
+
+**Deployment on AWS**
+
+We deployed our app on an S3 bucket to be highly scalable. This way we can leverage the AWS ecosystem for the future features we intend on rolling out to our product. 

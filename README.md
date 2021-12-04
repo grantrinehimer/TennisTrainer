@@ -23,12 +23,16 @@ Requirements for HackChallenge
 ios Requirements
 ---
 **AutoLayout using NSLayoutContraint or SnapKit**
+I used NSLayoutConstraint to position all the components.
 
 **UICollectionView or UITableView**
+Used UITableView to display all the buckets for the various categories of videos.
 
 **Navigation**
+There's a push navigation controller for each bucket, and it brings the user to a screen where they can play the videos they've uploaded and upload more videos.
 
 **Integrating with API**
+I integrated with the backend API. The post and get requests aren't working as expected, but the google authentication does work.
 
 ---
 Backend Requirements

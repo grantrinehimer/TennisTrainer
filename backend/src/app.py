@@ -231,7 +231,8 @@ def upload_video():
     }
     Response encoding = JSON:
     {
-        'vid': 4
+        'vid': 4,
+        'url': 'www.something.m3u8'
     }
     """
 
@@ -293,7 +294,7 @@ def upload_video():
         print(e)
         return failure_response("Error while transferring video", 502)
 
-    return success_response({'vid': vid})
+    return success_response({'vid': vid, 'url': object_url})
 
 
 @app.route("/api/media/<int:vid>/tag/", methods=['POST'])

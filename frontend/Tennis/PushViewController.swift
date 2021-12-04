@@ -1,9 +1,19 @@
 
 import UIKit
+import AVKit
+import AVFoundation
+import Alamofire
+import GoogleSignIn
 
-class PushViewController: UIViewController {
+protocol UpdateGoogleProfileDelegate: class {
+    func updateGoogleUserID(id: String)
+}
+
+class PushViewController: UIViewController, UIImagePickerControllerDelegate & UINavigationControllerDelegate {
     weak var delegate: UpdateTitleDelegate?
 
+    var userID = "";
+    
     private var textFieldName = UITextField()
     private var textViewName = UITextView()
     
@@ -21,6 +31,10 @@ class PushViewController: UIViewController {
     
     private var currBucket: Bucket?
     private var indexPath: IndexPath?
+    
+    private var uploadButton = UIButton()
+    private var playButton = UIButton()
+    
     
     init(delegate: UpdateTitleDelegate?, bucket: Bucket, indexPath: IndexPath, placeholderTextName: String, placeholderTextDate: String, placeholderTextLink: String) {
         self.delegate = delegate
@@ -83,6 +97,26 @@ class PushViewController: UIViewController {
         textViewLink.textAlignment = .left
         view.addSubview(textViewLink)
         
+
+        playButton.translatesAutoresizingMaskIntoConstraints = false
+        playButton.setTitle("Play", for: .normal)
+        playButton.setTitleColor(.black, for: .normal)
+        playButton.backgroundColor = UIColor(red: 200/255, green: 200/255, blue: 200/255, alpha: 1)
+        playButton.layer.cornerRadius = 4
+        playButton.addTarget(self, action: #selector(playVideo), for: .touchUpInside)
+        view.addSubview(playButton)
+        
+        
+        uploadButton.translatesAutoresizingMaskIntoConstraints = false
+        uploadButton.setTitle("Upload", for: .normal)
+        uploadButton.setTitleColor(.black, for: .normal)
+        uploadButton.backgroundColor = UIColor(red: 200/255, green: 200/255, blue: 200/255, alpha: 1)
+        uploadButton.layer.cornerRadius = 4
+        uploadButton.addTarget(self, action: #selector(selectImageFromPhotoLibrary), for: .touchUpInside)
+        view.addSubview(uploadButton)
+        
+        
+        
         saveButton.translatesAutoresizingMaskIntoConstraints = false
         saveButton.setTitle("Save", for: .normal)
         saveButton.setTitleColor(.black, for: .normal)
@@ -94,6 +128,10 @@ class PushViewController: UIViewController {
         setUpConstraints()
 
     }
+    
+    
+    
+    
     func setUpConstraints() {
         
         NSLayoutConstraint.activate([
@@ -126,7 +164,7 @@ class PushViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            saveButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -12),
+            saveButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 5),
             saveButton.widthAnchor.constraint(equalToConstant: 120),
             saveButton.heightAnchor.constraint(equalToConstant: 32)
         ])
@@ -137,16 +175,92 @@ class PushViewController: UIViewController {
             textViewLink.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -24),
             textViewLink.heightAnchor.constraint(equalToConstant: 32)
         ])
-        
         NSLayoutConstraint.activate([
             textFieldLink.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             textFieldLink.topAnchor.constraint(equalTo: textViewLink.bottomAnchor, constant: 10),
             textFieldLink.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -24),
             textFieldLink.heightAnchor.constraint(equalToConstant: 32)
         ])
+        NSLayoutConstraint.activate([
+            uploadButton.widthAnchor.constraint(equalToConstant: 120),
+            uploadButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            uploadButton.heightAnchor.constraint(equalToConstant: 32),
+            uploadButton.topAnchor.constraint(equalTo: textFieldLink.bottomAnchor, constant: 20)
+        ])
         
+        NSLayoutConstraint.activate([
+            playButton.widthAnchor.constraint(equalToConstant: 120),
+            playButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            playButton.heightAnchor.constraint(equalToConstant: 32),
+            playButton.topAnchor.constraint(equalTo: uploadButton.bottomAnchor, constant: 20)
+        ])
+        
+    }
+    
+    let imagePickerController = UIImagePickerController()
+    var videoURL: NSURL?
+
+    @IBAction func selectImageFromPhotoLibrary(sender: UIBarButtonItem) {
+      self.imagePickerController.sourceType = .photoLibrary
+      self.imagePickerController.delegate = self
+      self.imagePickerController.mediaTypes = ["public.image", "public.movie"]
+
+      present(self.imagePickerController, animated: true, completion: nil)
+      //print("hello")
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            dismiss(animated: true, completion: nil)
+            //guard let movieUrl = info[.mediaURL] as? NSURL
+            //print(movieUrl)
+
+        if let videoUrl = info[.mediaURL] as? URL {
+
+            let headers: HTTPHeaders = [
+                "Content-type": "multipart/form-data"
+            ]
+
+         AF.upload(
+            multipartFormData: { (multipartFormData) in
+                multipartFormData.append("sampleFileName".data(using: String.Encoding.utf8, allowLossyConversion: false)!, withName: "filename")
+                multipartFormData.append("sampleDisplayTitle".data(using: String.Encoding.utf8, allowLossyConversion: false)!, withName: "display_title")
+                multipartFormData.append(self.userID.data(using: String.Encoding.utf8, allowLossyConversion: false)!, withName: "uid")
+
+                
+                multipartFormData.append(videoUrl, withName: "file")
+//             multipartFormData.append(videoUrl, withName: "file", fileName: "movie.mov", mimeType: "video/mov")
+
+             }, to:"https://tennis-trainer.herokuapp.com/api/media/", method: .post , headers: headers)
+             { (result) in
+                 print(result.debugDescription)
+
+             }
+            
 
 
+
+//         self.dismiss(animated: true, completion: nil)
+         }
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            dismiss(animated: true, completion: nil)
+    }
+    
+    @IBAction func playVideo(_ sender: UIButton) {
+        guard let url = URL(string: "https://appdev-backend-final.s3.us-east-2.amazonaws.com/hls/RFvsNadal_full_point_0.fmp4/index.m3u8") else { return }
+
+        // Create an AVPlayer, passing it the HTTP Live Streaming URL.
+        let player = AVPlayer(url: url)
+
+        // Create a new AVPlayerViewController and pass it a reference to the player.
+        let controller = AVPlayerViewController()
+        controller.player = player
+
+        // Modally present the player and call the player's play() method when complete.
+        present(controller, animated: true) {
+            player.play()
+        }
     }
     
     @objc func saveInfo() {
@@ -156,3 +270,10 @@ class PushViewController: UIViewController {
 
 }
 
+extension PushViewController: UpdateGoogleProfileDelegate {
+
+    func updateGoogleUserID(id: String) {
+        userID = id
+    }
+
+}

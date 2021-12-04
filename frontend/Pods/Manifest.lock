@@ -1,0 +1,50 @@
+PODS:
+  - Alamofire (5.4.4)
+  - AppAuth (1.4.0):
+    - AppAuth/Core (= 1.4.0)
+    - AppAuth/ExternalUserAgent (= 1.4.0)
+  - AppAuth/Core (1.4.0)
+  - AppAuth/ExternalUserAgent (1.4.0)
+  - AWSCore (2.26.5)
+  - AWSS3 (2.26.5):
+    - AWSCore (= 2.26.5)
+  - GoogleSignIn (6.0.2):
+    - AppAuth (~> 1.4)
+    - GTMAppAuth (~> 1.0)
+    - GTMSessionFetcher/Core (~> 1.1)
+  - GTMAppAuth (1.2.2):
+    - AppAuth/Core (~> 1.4)
+    - GTMSessionFetcher/Core (~> 1.5)
+  - GTMSessionFetcher/Core (1.7.0)
+  - SnapKit (5.0.1)
+
+DEPENDENCIES:
+  - Alamofire
+  - AWSS3
+  - GoogleSignIn
+  - SnapKit
+
+SPEC REPOS:
+  trunk:
+    - Alamofire
+    - AppAuth
+    - AWSCore
+    - AWSS3
+    - GoogleSignIn
+    - GTMAppAuth
+    - GTMSessionFetcher
+    - SnapKit
+
+SPEC CHECKSUMS:
+  Alamofire: f3b09a368f1582ab751b3fff5460276e0d2cf5c9
+  AppAuth: 31bcec809a638d7bd2f86ea8a52bd45f6e81e7c7
+  AWSCore: e84c89bded6fae98ae9c297c71f10f2c87eedc3d
+  AWSS3: aafe113c5fb59f9c82bd3ba26c2c3698e23d5a36
+  GoogleSignIn: fd381840dbe7c1137aa6dc30849a5c3e070c034a
+  GTMAppAuth: ad5c2b70b9a8689e1a04033c9369c4915bfcbe89
+  GTMSessionFetcher: 43748f93435c2aa068b1cbe39655aaf600652e91
+  SnapKit: 97b92857e3df3a0c71833cce143274bf6ef8e5eb
+
+PODFILE CHECKSUM: 306b4c9b8eea20b63e05d19203d87c8c30ae988b
+
+COCOAPODS: 1.11.2

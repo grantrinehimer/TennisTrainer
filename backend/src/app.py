@@ -234,6 +234,7 @@ def upload_video():
         'vid': 4
     }
     """
+    print("Hello world")
 
     filename = request.form.get("filename")
     display_title = request.form.get("display_title")

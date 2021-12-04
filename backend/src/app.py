@@ -222,13 +222,14 @@ def get_video_url(vid):
 @app.route("/api/media/", methods=["POST"])
 def upload_video():
     """
-    Request:
+    Request encoding = form-data:
     {
+        'file': <FILEDATA>
         'filename': 'backhand.mp4',
         'display_title': 'Backhand Serve 12-2-2021',
         'uid': 5
     }
-    Response:
+    Response encoding = JSON:
     {
         'vid': 4
     }
@@ -268,7 +269,7 @@ def upload_video():
         db.session.add(new_upload)
         db.session.flush()
         vid = new_upload.vid
-        vkey = str(hash(str(filename+str(uid)+str(vid))))
+        vkey = str(abs(hash(str(filename+str(uid)+str(vid)))))
         new_upload.vkey = vkey
         db.session.commit()
     except Exception as e:
@@ -287,7 +288,7 @@ def upload_video():
         remove_fmp4(path_to_fmp4)
     except Exception as e:
         # Delete unsuccessful upload from database
-        Upload.query.filter_by(id=vid).delete()
+        Upload.query.filter_by(vid=vid).delete()
         db.session.commit()
         print(e)
         return failure_response("Error while transferring video")

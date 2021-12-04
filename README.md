@@ -41,3 +41,4 @@ We built routes for "POSTING" and "GETTING" from our S3 bucket. This included fo
 **Deployment on AWS**
 
 We deployed our app on an S3 bucket to be highly scalable. This way we can leverage the AWS ecosystem for the future features we intend on rolling out to our product. 
+

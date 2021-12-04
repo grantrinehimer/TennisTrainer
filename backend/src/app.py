@@ -234,10 +234,9 @@ def upload_video():
     }
     """
 
-    body = json.loads(request.data)
-    filename = body.get("filename")
-    display_title = body.get("display_title")
-    uid = body.get("uid")
+    filename = request.form.get("filename")
+    display_title = request.form.get("display_title")
+    uid = request.form.get("uid")
 
     if filename is None or display_title is None or uid is None:
         return failure_response("Did not provide all requested fields.", 400)

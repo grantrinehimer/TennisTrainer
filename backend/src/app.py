@@ -278,7 +278,7 @@ def upload_video():
 
     try:
         # Save file to disk
-        path_to_mp4 = os.path.join(app.config['UPLOAD_PATH'], vkey)
+        path_to_mp4 = os.path.join(app.config['UPLOAD_PATH'], vkey) + '.mp4'
         uploaded_file.save(path_to_mp4)
 
         # Convert, compress, and upload file to AWS

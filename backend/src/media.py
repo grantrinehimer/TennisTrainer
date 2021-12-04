@@ -43,7 +43,7 @@ def convert_mp4_to_hsl(path_to_mp4: str) -> str:
 
     try:
         subprocess.run(["/app/video2hls/video2hls", "--debug", "--output",
-                    f"{path_no_ext}.fmp4", "--hls-type", "fmp4", f"{path_to_mp4}"], check=True, capture_output=True, stderr=subprocess.STDOUT)
+                    f"{path_no_ext}.fmp4", "--hls-type", "fmp4", f"{path_to_mp4}"], check=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         print(e.returncode)
         print(e.output)

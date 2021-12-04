@@ -83,23 +83,11 @@ class PushViewController: UIViewController, UIImagePickerControllerDelegate & UI
         textViewDate.textAlignment = .left
         view.addSubview(textViewDate)
         
-        textFieldLink.translatesAutoresizingMaskIntoConstraints = false
-        textFieldLink.font = UIFont.systemFont(ofSize: 18)
-        textFieldLink.text = placeholderTextLink
-        textFieldLink.borderStyle = .roundedRect
-        textFieldLink.textAlignment = .center
-        view.addSubview(textFieldLink)
-        
-        
-        textViewLink.translatesAutoresizingMaskIntoConstraints = false
-        textViewLink.font = UIFont.systemFont(ofSize: 18)
-        textViewLink.text = "Link (Youtube)"
-        textViewLink.textAlignment = .left
-        view.addSubview(textViewLink)
-        
+
+
 
         playButton.translatesAutoresizingMaskIntoConstraints = false
-        playButton.setTitle("Play", for: .normal)
+        playButton.setTitle("11/20/2021", for: .normal)
         playButton.setTitleColor(.black, for: .normal)
         playButton.backgroundColor = UIColor(red: 200/255, green: 200/255, blue: 200/255, alpha: 1)
         playButton.layer.cornerRadius = 4
@@ -168,24 +156,12 @@ class PushViewController: UIViewController, UIImagePickerControllerDelegate & UI
             saveButton.widthAnchor.constraint(equalToConstant: 120),
             saveButton.heightAnchor.constraint(equalToConstant: 32)
         ])
-        
-        NSLayoutConstraint.activate([
-            textViewLink.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            textViewLink.topAnchor.constraint(equalTo: textFieldDate.bottomAnchor, constant: 20),
-            textViewLink.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -24),
-            textViewLink.heightAnchor.constraint(equalToConstant: 32)
-        ])
-        NSLayoutConstraint.activate([
-            textFieldLink.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            textFieldLink.topAnchor.constraint(equalTo: textViewLink.bottomAnchor, constant: 10),
-            textFieldLink.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -24),
-            textFieldLink.heightAnchor.constraint(equalToConstant: 32)
-        ])
+
         NSLayoutConstraint.activate([
             uploadButton.widthAnchor.constraint(equalToConstant: 120),
             uploadButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             uploadButton.heightAnchor.constraint(equalToConstant: 32),
-            uploadButton.topAnchor.constraint(equalTo: textFieldLink.bottomAnchor, constant: 20)
+            uploadButton.topAnchor.constraint(equalTo: textFieldDate.bottomAnchor, constant: 20)
         ])
         
         NSLayoutConstraint.activate([
@@ -248,7 +224,7 @@ class PushViewController: UIViewController, UIImagePickerControllerDelegate & UI
     }
     
     @IBAction func playVideo(_ sender: UIButton) {
-        guard let url = URL(string: "https://appdev-backend-final.s3.us-east-2.amazonaws.com/hls/RFvsNadal_full_point_0.fmp4/index.m3u8") else { return }
+        guard let url = URL(string: "https://appdev-backend-final.s3.us-east-2.amazonaws.com/hls/example.fmp4/index.m3u8") else { return }
 
         // Create an AVPlayer, passing it the HTTP Live Streaming URL.
         let player = AVPlayer(url: url)

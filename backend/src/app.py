@@ -56,7 +56,7 @@ else:
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 512 # Don't accept files larger than 0.5GB
 app.config['UPLOAD_EXTENSIONS'] = ['.mp4']
-app.config['UPLOAD_PATH'] = 'uploads'
+app.config['UPLOAD_PATH'] = 'tmp'
 
 db.init_app(app)
 with app.app_context():
@@ -280,8 +280,6 @@ def upload_video():
         # Save file to disk
         path_to_mp4 = os.path.join(app.config['UPLOAD_PATH'], vkey)
         uploaded_file.save(path_to_mp4)
-        with open('shawty.txt', 'w') as f:
-            f.write('please spawn on herokus servers')
 
         # Convert, compress, and upload file to AWS
         path_to_fmp4 = convert_mp4_to_hsl(path_to_mp4)

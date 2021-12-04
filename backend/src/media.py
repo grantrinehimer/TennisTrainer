@@ -37,7 +37,7 @@ def convert_mp4_to_hsl(path_to_mp4: str) -> str:
     path_no_ext = os.path.splitext(path_to_mp4)[0]
     # Call git submodule containing python executable video2hls
     subprocess.run(["/app/video2hls/video2hls", "--debug", "--output",
-                    f"{path_no_ext}.fmp4", "--hls-type", "fmp4", f"{path_to_mp4}"])
+                    f"{path_no_ext}.fmp4", "--hls-type", "fmp4", f"{path_to_mp4}"], check=True, capture_output=True)
     # Remove original .mp4
     os.remove(path_to_mp4)
     return f"{path_no_ext}.fmp4"

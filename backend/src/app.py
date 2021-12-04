@@ -80,14 +80,14 @@ def authenticate_user():
     }
     Response:
     {
-        "uid": {User's local id},
+        "uid": "{User's local id}",
         "display_name": "{User's display name}",
         "email": "{User's email}"
         "uploads":
             [
                 {
-                    "vid": {video id},
-                    "display_title": {display title of video}
+                    "vid": "{video id}",
+                    "display_title": "{display title of video}"
                     "tags": [
                         {
                             "tid": 1,
